@@ -1,10 +1,50 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joaoino100/api-go-gin/database"
+	"github.com/joaoino100/api-go-gin/models"
+)
 
 func ExibeTodosAlunos(c *gin.Context) {
+	var alunos []models.Aluno
+	database.DB.Find(&alunos)
+	c.JSON(200, alunos)
+}
+
+func Saudacao(c *gin.Context) {
+	nome := c.Params.ByName("nome")
 	c.JSON(200, gin.H{
-		"id":   "1",
-		"nome": "João Inocêncio",
+		"API diz:": "E ai " + nome + ", tudo beleza?",
 	})
+}
+
+func CriaNovoAluno(c *gin.Context) {
+	var aluno models.Aluno
+	if err := c.ShouldBindJSON(&aluno); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+
+		return
+	}
+
+	database.DB.Create(&aluno)
+	c.JSON(http.StatusOK, aluno)
+}
+
+func BuscaAlunoPorID(c *gin.Context) {
+	var aluno models.Aluno
+	id := c.Params.ByName("id")
+	database.DB.First(&aluno, id)
+
+	if aluno.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"Not found": "ALUNO NÃO ENCONTRADO"})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, aluno)
 }
